@@ -7,6 +7,7 @@ import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { format, endOfMonth } from 'date-fns';
 import { itemVariants } from './variants';
+import { apiFetch } from '../../src/lib/api';
 
 // Custom Input Component for DatePicker
 const CustomDateInput = forwardRef((props, ref) => (
@@ -51,10 +52,8 @@ const ExpenseDataCard = ({
                 const year = selectedDate.getFullYear();
                 const month = selectedDate.getMonth() + 1;
                 
-                const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/transactions/stats?month=${month}&year=${year}`, {
+                const response = await apiFetch(`/api/transactions/stats?month=${month}&year=${year}`, {
                     method: 'GET',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include'
                 });
 
                 if (response.ok) {

@@ -6,7 +6,7 @@ const Step3Confirm = () => {
 
     return (
         <div className="w-full text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">You're almost there</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">You&apos;re almost there</h2>
             <p className="text-gray-500 mb-8">Review your information and complete the setup.</p>
 
             <div className="text-gray-600">

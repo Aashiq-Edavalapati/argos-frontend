@@ -1,15 +1,28 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, Bell, Mail, ChevronDown, LogOut } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { ChevronDown, LogOut, Menu, X } from 'lucide-react';
 import useAuthStore from '../../src/store/useAuthStore';
+import { apiFetch } from '../../src/lib/api';
+import { MENU_ITEMS } from './Sidebar';
 
-const Header = () => {
+const Header = ({ title: propTitle }) => {
   const { user, logout } = useAuthStore();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const dropdownRef = useRef(null);
   const router = useRouter();
+  const pathname = usePathname();
+
+  const getPageTitle = () => {
+    if (propTitle) return propTitle;
+    if (pathname === '/expenses') return 'Expenses & Transactions';
+    if (pathname === '/splits') return 'Splits & Debts';
+    if (pathname === '/recurring') return 'Recurring Commitments';
+    return 'Dashboard';
+  };
 
   const getInitials = (name) => {
     if (!name) return 'US';
@@ -21,7 +34,7 @@ const Header = () => {
       .slice(0, 2);
   };
 
-  const displayName = user?.name || "User";
+  const displayName = user?.name || user?.email?.split('@')[0] || "User";
   const initials = getInitials(displayName);
 
   // Close dropdown when clicking outside
@@ -39,58 +52,137 @@ const Header = () => {
 
   const handleLogout = async () => {
     try {
-      // Call backend to clear cookies
-      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/logout`, {
-        method: "POST", // or GET depending on your route, usually POST for logout
-        credentials: "include"
+      await apiFetch('/auth/logout', {
+        method: "POST"
       });
-      // Clear client state
-      logout();
-      // Redirect
-      router.push('/login');
     } catch (error) {
-      console.error("Logout failed", error);
+      console.warn("Backend logout notification failed:", error);
+    } finally {
+      logout();
+      router.push('/login');
     }
   };
 
   return (
-    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 relative">
-      <h1 className="text-2xl md:text-3xl font-bold text-white">Dashboard</h1>
-      
-      <div className="flex items-center gap-4 w-full md:w-auto">
-        <div className="relative flex-1 md:w-80">
-        </div>
-        
-        <div className="flex items-center gap-3 relative" ref={dropdownRef}>
-          
-          <div 
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="hidden md:flex items-center gap-2 bg-[#CDC9EF] p-1.5 pr-4 rounded-full cursor-pointer hover:opacity-90 transition-opacity select-none"
+    <>
+      <div className="flex justify-between items-center mb-8 gap-4 relative">
+        <div className="flex items-center gap-3">
+          {/* Mobile Menu Button */}
+          <button
+            type="button"
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="lg:hidden p-2 rounded-xl bg-[#1C1C1E] text-white hover:bg-white/10 transition-colors"
+            title="Open Menu"
           >
-            <div className="w-8 h-8 rounded-full bg-[#0A0A0A] flex items-center justify-center">
-              <span className="text-white text-xs font-bold">{initials}</span>
-            </div>
-            <span className="text-[#0A0A0A] font-medium text-sm">{displayName}</span>
-            <ChevronDown size={14} className={`text-[#0A0A0A] transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
-          </div>
+            <Menu size={20} />
+          </button>
 
-          {/* Dropdown Menu */}
-          {isDropdownOpen && (
-            <div className="absolute top-full right-0 mt-2 w-48 bg-[#1C1C1E] border border-gray-800 rounded-xl shadow-lg py-1 z-50 overflow-hidden">
-              <button 
-                onClick={handleLogout}
-                className="w-full px-4 py-3 text-left text-red-400 hover:bg-[#2C2C2E] flex items-center gap-2 transition-colors text-sm font-medium"
-              >
-                <LogOut size={16} />
-                Logout
-              </button>
+          <h1 className="text-2xl md:text-3xl font-bold text-white">
+            {getPageTitle()}
+          </h1>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 relative" ref={dropdownRef}>
+            <div 
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="flex items-center gap-2 bg-[#CDC9EF] p-1.5 pr-3 md:pr-4 rounded-full cursor-pointer hover:opacity-90 transition-opacity select-none"
+            >
+              <div className="w-8 h-8 rounded-full bg-[#0A0A0A] flex items-center justify-center shrink-0">
+                <span className="text-white text-xs font-bold">{initials}</span>
+              </div>
+              <span className="text-[#0A0A0A] font-semibold text-sm hidden sm:inline truncate max-w-[120px]">
+                {displayName}
+              </span>
+              <ChevronDown 
+                size={14} 
+                className={`text-[#0A0A0A] transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} 
+              />
             </div>
-          )}
+
+            {/* Dropdown Menu */}
+            {isDropdownOpen && (
+              <div className="absolute top-full right-0 mt-2 w-52 bg-[#1C1C1E] border border-gray-800 rounded-2xl shadow-2xl py-1.5 z-50 overflow-hidden">
+                <div className="px-4 py-2 border-b border-white/5">
+                  <p className="text-xs font-semibold text-white truncate">{displayName}</p>
+                  <p className="text-[11px] text-gray-400 truncate">{user?.email}</p>
+                </div>
+
+                <button 
+                  onClick={handleLogout}
+                  className="w-full px-4 py-2.5 text-left text-red-400 hover:bg-[#2C2C2E] flex items-center gap-2 transition-colors text-xs font-bold"
+                >
+                  <LogOut size={14} />
+                  Logout
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Mobile Drawer Navigation */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm lg:hidden flex"
+          onClick={() => setIsMobileMenuOpen(false)}
+        >
+          <div 
+            className="w-72 bg-[#0A0A0A] h-full p-6 flex flex-col justify-between border-r border-white/10"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div>
+              <div className="flex justify-between items-center mb-8">
+                <div className="text-xl font-bold text-white flex items-center gap-2">
+                  <span>ARGOS</span>
+                  <span className="text-xs bg-[#D8EFA8] text-[#0A0A0A] px-2 py-0.5 rounded-full font-black">
+                    LIVE
+                  </span>
+                </div>
+                <button
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="text-gray-400 hover:text-white"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <nav className="space-y-2">
+                {MENU_ITEMS.map((item, index) => {
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link
+                      key={index}
+                      href={item.href}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={`flex items-center w-full p-3 rounded-xl transition-all ${
+                        isActive 
+                          ? 'bg-app-lime text-[#0A0A0A] font-bold' 
+                          : 'text-gray-400 hover:bg-app-card hover:text-white font-medium'
+                      }`}
+                    >
+                      <item.icon size={19} className="mr-3" />
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </nav>
+            </div>
+
+            <div className="pt-4 border-t border-white/5">
+              <button
+                onClick={handleLogout}
+                className="w-full p-3 text-red-400 hover:bg-red-500/10 rounded-xl flex items-center gap-2 text-sm font-semibold transition-colors"
+              >
+                <LogOut size={16} />
+                Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
-
 
 export default Header;
