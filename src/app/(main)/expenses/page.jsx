@@ -112,16 +112,21 @@ const TransactionInspector = ({
           </button>
 
           <div className="flex flex-col items-center mt-2">
-            <div className="text-4xl font-bold mb-2 text-white">
-              - ₹{Math.abs(transaction.amount).toLocaleString()}
+            <div className={`text-4xl font-bold mb-2 ${transaction.isExpense === false ? 'text-[#D8EFA8]' : 'text-white'}`}>
+              {transaction.isExpense === false ? '+ ' : '- '}₹{Math.abs(transaction.amount).toLocaleString()}
             </div>
             <h2 className="text-xl font-semibold text-white">{transaction.merchant}</h2>
             <div className="text-gray-400 text-sm mt-1 flex items-center gap-2">
               <Calendar size={14} /> {transaction.formattedDate} at {transaction.formattedTime}
             </div>
 
-            {/* Category tag */}
+            {/* Type & Category tags */}
             <div className="mt-3 flex items-center gap-2">
+              <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
+                transaction.isExpense === false ? 'bg-[#D8EFA8]/20 text-[#D8EFA8]' : 'bg-white/10 text-gray-300'
+              }`}>
+                {transaction.type === 'REFUND' ? 'Refund' : transaction.isExpense === false ? 'Received Payment' : 'Expense'}
+              </span>
               {!isEditingCategory ? (
                 <button
                   onClick={() => setIsEditingCategory(true)}
@@ -503,8 +508,10 @@ export default function ExpensesPage() {
                   >
                     {/* Merchant Col */}
                     <div className="col-span-6 md:col-span-4 pl-2 flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-gray-800 text-white">
-                        <ArrowUpRight size={18} />
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                        tx.isExpense === false ? 'bg-[#D8EFA8]/15 text-[#D8EFA8]' : 'bg-gray-800 text-white'
+                      }`}>
+                        {tx.isExpense === false ? <ArrowDownLeft size={18} /> : <ArrowUpRight size={18} />}
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
@@ -528,10 +535,20 @@ export default function ExpensesPage() {
                     </div>
 
                     {/* Category Col */}
-                    <div className="col-span-3 md:col-span-2 hidden md:flex items-center">
+                    <div className="col-span-3 md:col-span-2 hidden md:flex items-center gap-1.5">
                       <span className="px-3 py-1 rounded-full text-xs font-medium bg-[#0A0A0A] border border-gray-800 text-gray-300">
                         {tx.category}
                       </span>
+                      {tx.type === 'REFUND' && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#D8EFA8]/20 text-[#D8EFA8]">
+                          Refund
+                        </span>
+                      )}
+                      {(tx.type === 'INCOME' || tx.isExpense === false) && tx.type !== 'REFUND' && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#D8EFA8]/20 text-[#D8EFA8]">
+                          Received
+                        </span>
+                      )}
                     </div>
 
                     {/* Status Col */}
@@ -541,8 +558,10 @@ export default function ExpensesPage() {
                     </div>
 
                     {/* Amount Col */}
-                    <div className="col-span-6 md:col-span-2 text-right pr-2 font-bold text-white">
-                      - ₹{Math.abs(tx.amount).toLocaleString()}
+                    <div className={`col-span-6 md:col-span-2 text-right pr-2 font-bold ${
+                      tx.isExpense === false ? 'text-[#D8EFA8]' : 'text-white'
+                    }`}>
+                      {tx.isExpense === false ? '+ ' : '- '}₹{Math.abs(tx.amount).toLocaleString()}
                     </div>
                   </motion.div>
                 ))

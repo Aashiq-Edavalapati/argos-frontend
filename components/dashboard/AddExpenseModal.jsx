@@ -28,6 +28,7 @@ const CATEGORIES = [
 export default function AddExpenseModal({ onClose, onCreated }) {
   const [merchant, setMerchant] = useState('');
   const [amount, setAmount] = useState('');
+  const [type, setType] = useState('EXPENSE'); // 'EXPENSE' | 'REFUND' | 'INCOME'
   const [category, setCategory] = useState('Food');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [description, setDescription] = useState('');
@@ -44,7 +45,7 @@ export default function AddExpenseModal({ onClose, onCreated }) {
       return;
     }
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      setError("Please enter a valid expense amount");
+      setError("Please enter a valid amount");
       return;
     }
 
@@ -56,6 +57,8 @@ export default function AddExpenseModal({ onClose, onCreated }) {
           merchant: merchant.trim(),
           amount: parsedAmount,
           category,
+          type,
+          isExpense: type === 'EXPENSE',
           date: new Date(date).toISOString(),
           description: description.trim() || undefined,
         }
@@ -113,6 +116,43 @@ export default function AddExpenseModal({ onClose, onCreated }) {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {/* Type Selector (Expense vs Refund vs Received) */}
+          <div className="flex bg-[#0A0A0A] p-1 rounded-xl border border-white/10 gap-1">
+            <button
+              type="button"
+              onClick={() => setType('EXPENSE')}
+              className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+                type === 'EXPENSE'
+                  ? 'bg-white/15 text-white'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              Expense
+            </button>
+            <button
+              type="button"
+              onClick={() => setType('REFUND')}
+              className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+                type === 'REFUND'
+                  ? 'bg-[#D8EFA8] text-[#0A0A0A]'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              Refund
+            </button>
+            <button
+              type="button"
+              onClick={() => setType('INCOME')}
+              className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+                type === 'INCOME'
+                  ? 'bg-[#D8EFA8] text-[#0A0A0A]'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              Received
+            </button>
+          </div>
+
           <div>
             <label className="text-xs text-gray-400 font-semibold uppercase tracking-wider block mb-1.5">
               Merchant / Payee

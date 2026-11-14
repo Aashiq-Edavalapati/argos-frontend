@@ -108,7 +108,19 @@ const TransactionsTable = () => {
                       </div>
                     </div>
                   </td>
-                  <td className="py-4 text-sm text-gray-300">Expense</td>
+                  <td className="py-4 text-sm">
+                    {t.type === 'REFUND' ? (
+                      <span className="text-[#D8EFA8] font-medium bg-[#D8EFA8]/10 px-2.5 py-0.5 rounded-full text-xs">
+                        Refund
+                      </span>
+                    ) : (t.type === 'INCOME' || t.isExpense === false) ? (
+                      <span className="text-[#D8EFA8] font-medium bg-[#D8EFA8]/10 px-2.5 py-0.5 rounded-full text-xs">
+                        Received
+                      </span>
+                    ) : (
+                      <span className="text-gray-300">Expense</span>
+                    )}
+                  </td>
                   <td className="py-4">
                     <span className="bg-app-lime text-[#0A0A0A] text-xs font-bold px-3 py-1 rounded-full">
                       Completed
@@ -118,8 +130,8 @@ const TransactionsTable = () => {
                     <div className="text-sm text-gray-300">{format(new Date(t.date), 'MMM d, yyyy')}</div>
                     <div className="text-xs text-gray-500">{formatDistanceToNow(new Date(t.date), { addSuffix: true })}</div>
                   </td>
-                  <td className="py-4 text-right pr-4 font-bold text-white">
-                    ₹{parseFloat(t.amount).toLocaleString()}
+                  <td className={`py-4 text-right pr-4 font-bold ${t.isExpense === false ? 'text-[#D8EFA8]' : 'text-white'}`}>
+                    {t.isExpense === false ? '+ ' : ''}₹{parseFloat(t.amount).toLocaleString()}
                   </td>
                 </tr>
               );

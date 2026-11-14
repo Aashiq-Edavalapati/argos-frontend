@@ -19,6 +19,7 @@ export default function Dashboard() {
     owedToYou: 0,
     youOwe: 0,
     receivedAmount: 0,
+    receivedWeeklyStats: [0, 0, 0, 0, 0, 0, 0],
     budget: 0,
     totalSpent: 0
   });
@@ -51,6 +52,7 @@ export default function Dashboard() {
             owedToYou: data.owedToYou || 0,
             youOwe: data.youOwe || 0,
             receivedAmount: data.receivedAmount || 0,
+            receivedWeeklyStats: data.receivedWeeklyStats || [0, 0, 0, 0, 0, 0, 0],
             budget: data.budget || 0,
             totalSpent: data.totalSpent || 0
           });
@@ -84,6 +86,7 @@ export default function Dashboard() {
           <ReceivedAmountCard 
             receivedAmount={globalStats.receivedAmount}
             youOwe={globalStats.youOwe}
+            weeklyStats={globalStats.receivedWeeklyStats}
           />
         </div>
 

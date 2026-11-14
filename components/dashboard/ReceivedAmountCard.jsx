@@ -1,14 +1,52 @@
 "use client";
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { itemVariants } from './variants';
 
-const ReceivedAmountCard = ({ receivedAmount = 0, youOwe = 0 }) => {
+const ReceivedAmountCard = ({ receivedAmount = 0, youOwe = 0, weeklyStats = [0, 0, 0, 0, 0, 0, 0] }) => {
   const router = useRouter();
   const currentMonth = format(new Date(), 'MMM yyyy');
+
+  // Compute dynamic SVG sparkline path from weeklyStats (Sun..Sat)
+  const { linePath, areaPath } = useMemo(() => {
+    const stats = Array.isArray(weeklyStats) && weeklyStats.length === 7
+      ? weeklyStats
+      : [0, 0, 0, 0, 0, 0, 0];
+
+    const maxVal = Math.max(...stats, 1);
+    const hasData = stats.some(v => v > 0);
+
+    // 7 points: x goes from 0 to 100 in steps of 100/6 (~16.67)
+    // y goes from 34 (baseline) to 8 (peak)
+    const points = stats.map((val, idx) => {
+      const x = Math.round((idx / 6) * 100);
+      const ratio = hasData ? val / maxVal : 0;
+      const y = Math.round(34 - ratio * 26);
+      return { x, y };
+    });
+
+    // If no data, return a clean flat baseline
+    if (!hasData) {
+      const line = "M 0 34 L 100 34";
+      const area = "M 0 34 L 100 34 L 100 40 L 0 40 Z";
+      return { linePath: line, areaPath: area };
+    }
+
+    // Generate smooth cubic bezier SVG path connecting the 7 points
+    let d = `M ${points[0].x} ${points[0].y}`;
+    for (let i = 0; i < points.length - 1; i++) {
+      const curr = points[i];
+      const next = points[i + 1];
+      const midX = (curr.x + next.x) / 2;
+      d += ` C ${midX} ${curr.y}, ${midX} ${next.y}, ${next.x} ${next.y}`;
+    }
+
+    const area = `${d} L 100 40 L 0 40 Z`;
+    return { linePath: d, areaPath: area };
+  }, [weeklyStats]);
 
   return (
     <motion.div
@@ -26,23 +64,27 @@ const ReceivedAmountCard = ({ receivedAmount = 0, youOwe = 0 }) => {
           )}
         </div>
         <h3 className="text-white text-md font-medium">Received Amount</h3>
-        <div className="text-2xl font-bold text-[#D8EFA8] mt-1">₹{receivedAmount}</div>
+        <div className="text-2xl font-bold text-[#D8EFA8] mt-1">₹{Number(receivedAmount).toLocaleString()}</div>
       </div>
       
       <div className="h-16 mt-4 flex items-end justify-between gap-1">
-        {/* SVG Sparkline */}
+        {/* Dynamic SVG Sparkline */}
         <svg className="w-full h-full overflow-visible" viewBox="0 0 100 40" preserveAspectRatio="none">
           <motion.path
-            d="M0 30 Q 15 20, 30 25 T 50 15 T 75 28 T 100 12"
+            key={linePath}
+            d={linePath}
             fill="none"
             stroke="#CDC9EF"
             strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
             initial={{ pathLength: 0 }}
             animate={{ pathLength: 1 }}
-            transition={{ duration: 1.5, ease: "easeInOut" }}
+            transition={{ duration: 1.2, ease: "easeInOut" }}
           />
           <motion.path
-            d="M0 30 Q 15 20, 30 25 T 50 15 T 75 28 T 100 12 V 50 H 0 Z"
+            key={areaPath}
+            d={areaPath}
             fill="url(#gradient-received)"
             opacity="0.25"
           />
