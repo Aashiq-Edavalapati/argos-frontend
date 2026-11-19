@@ -1,0 +1,14 @@
+# Settings for Firebase App Hosting (Next.js)
+runConfig:
+  minInstances: 0
+  maxInstances: 2
+  concurrency: 80
+  cpu: 1
+  memoryMiB: 512
+
+env:
+  - variable: NEXT_PUBLIC_BACKEND_URL
+    value: "https://argos-backend-804832153976.us-central1.run.app"
+    availability:
+      - BUILD
+      - RUNTIME
